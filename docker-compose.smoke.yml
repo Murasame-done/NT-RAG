@@ -1,0 +1,8 @@
+services:
+  python-ai:
+    environment:
+      DISABLE_OTEL_TRACING: "1"
+
+  go-service:
+    environment:
+      DISABLE_OTEL_TRACING: "1"

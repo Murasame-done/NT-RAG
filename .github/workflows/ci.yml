@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-build-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go-service/go.mod
+          cache-dependency-path: go-service/go.sum
+
+      - name: Go test
+        working-directory: go-service
+        run: go test ./...
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: python-ai/requirements-dev.txt
+
+      - name: Install Python deps
+        working-directory: python-ai
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Python test
+        working-directory: python-ai
+        run: pytest -q
+
+      - name: Docker compose build
+        run: docker compose build go-service python-ai
+
+      - name: Start smoke stack
+        run: docker compose -f docker-compose.yml -f docker-compose.smoke.yml up -d --build mysql qdrant python-ai go-service
+
+      - name: Wait for services
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          for ($i = 0; $i -lt 30; $i++) {
+            try {
+              $resp = Invoke-WebRequest http://localhost:8080/health -TimeoutSec 2
+              if ($resp.StatusCode -eq 200) {
+                break
+              }
+            } catch {
+            }
+            Start-Sleep -Seconds 2
+          }
+
+      - name: Smoke test
+        shell: pwsh
+        run: ./scripts/smoke.ps1
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.yml -f docker-compose.smoke.yml logs --no-color
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.smoke.yml down -v

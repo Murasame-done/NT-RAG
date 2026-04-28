@@ -1,0 +1,31 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# local env
+.env
+.codex-tmp/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Go
+go-service/gocache/
+
+# Docker / local runtime data
+data/
+
+# logs / temp
+*.log
+tmp/
+
+# local study docs at repo root
+/*.md
+!/README.md

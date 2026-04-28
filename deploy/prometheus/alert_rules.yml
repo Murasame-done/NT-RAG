@@ -1,0 +1,29 @@
+groups:
+  - name: ntrag-basic-alerts
+    rules:
+      - alert: GoServiceDown
+        expr: up{job="go-service"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "go-service is down"
+          description: "Prometheus cannot scrape go-service for more than 30 seconds."
+
+      - alert: GoServiceHigh5xxRate
+        expr: sum(rate(ntrag_http_requests_total{status=~"5.."}[5m])) by (route) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "go-service has 5xx responses"
+          description: "go-service route {{ $labels.route }} is returning 5xx responses."
+
+      - alert: PythonAIHighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(ntrag_python_ai_request_duration_seconds_bucket[5m])) by (le)) > 1
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "python-ai latency p95 is high"
+          description: "python-ai p95 latency is above 1 second for more than 1 minute."

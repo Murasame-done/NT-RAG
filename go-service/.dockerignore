@@ -1,0 +1,15 @@
+.git
+.idea
+.vscode
+
+bin/
+dist/
+tmp/
+coverage.out
+
+*.exe
+*.test
+*.log
+
+.DS_Store
+Thumbs.db
