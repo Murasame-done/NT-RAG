@@ -29,3 +29,6 @@ tmp/
 # local study docs at repo root
 /*.md
 !/README.md
+
+# deploy env
+.env.deploy
